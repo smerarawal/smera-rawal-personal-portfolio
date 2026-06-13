@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smera Rawal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --white:#eef0ff;
+  --dim:rgba(195,205,255,0.55);
+  --acc:#9b7bdb;
+  --acc2:#7eb6f0;
+  --gold:#f6c90e;
+  --bg:#03050f;
+  --red:#ff6b6b;
+  --orange:#ff9f43;
+  --glass-bg:rgba(40,35,75,.32);
+  --glass-border:rgba(170,180,255,.16);
+}
+
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Sora',sans-serif;
+  overflow-x:hidden;
+}
+
+/* ═══════════════════════════════════════
+   CANVAS — fixed, fills everything
+═══════════════════════════════════════ */
+#c{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+}
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  z-index:200;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.4rem 3.5rem;
+  mix-blend-mode:normal;
+}
+.logo{
+  font-family:'Space Mono',monospace;
+  font-size:.72rem;letter-spacing:.35em;
+  color:rgba(183,148,244,.7);text-transform:uppercase;
+}
+.nav-links{display:flex;gap:2.5rem;}
+.nav-links a{
+  font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(220,230,255,.82);text-decoration:none;
+  transition:color .3s;
+}
+.nav-links a:hover{color:#ffffff;text-shadow:0 0 12px rgba(183,148,244,.8);}
+
+/* ═══════════════════════════════════════
+   HUD OVERLAYS
+═══════════════════════════════════════ */
+.hud{
+  position:fixed;z-index:200;
+  font-family:'Space Mono',monospace;
+  pointer-events:none;
+}
+#hud-tl{top:3.2rem;left:50%;transform:translateX(-50%);text-align:center;}
+#hud-tl .hud-speed{font-size:.7rem;letter-spacing:.32em;color:#a8d4ff;text-shadow:0 0 14px rgba(126,182,240,.6);}
+#hud-tl .hud-coords{font-size:.6rem;letter-spacing:.2em;color:rgba(195,205,255,.45);margin-top:.3rem;}
+
+#hud-br{bottom:2rem;right:2.5rem;text-align:right;}
+#hud-br .hl{font-size:.6rem;letter-spacing:.2em;color:rgba(212,194,255,.6);line-height:2;}
+
+#hud-bl{bottom:2rem;left:2.5rem;}
+#hud-bl .hl{font-size:.6rem;letter-spacing:.2em;color:rgba(168,212,255,.6);line-height:2;}
+
+/* crosshair */
+#crosshair{
+  position:fixed;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:190;pointer-events:none;
+  width:40px;height:40px;
+  opacity:.25;
+}
+#crosshair::before,#crosshair::after{
+  content:'';position:absolute;background:rgba(183,148,244,.8);
+}
+#crosshair::before{width:1px;height:100%;left:50%;top:0;}
+#crosshair::after{height:1px;width:100%;top:50%;left:0;}
+
+/* ═══════════════════════════════════════
+   WARP OVERLAY — full screen on load
+═══════════════════════════════════════ */
+#warp-overlay{
+  position:fixed;inset:0;z-index:300;
+  background:radial-gradient(ellipse at center, rgba(10,5,30,0) 0%, #00000a 70%);
+  pointer-events:none;
+  animation:warpFadeIn 3s ease forwards;
+}
+@keyframes warpFadeIn{
+  0%{opacity:1;filter:brightness(3);}
+  60%{opacity:.6;filter:brightness(1.5);}
+  100%{opacity:0;}
+}
+
+/* ═══════════════════════════════════════
+   SCROLL CONTAINER — tall for scroll travel
+═══════════════════════════════════════ */
+#scroll-container{
+  position:relative;z-index:10;
+  /* each section is pinned via JS, container just gives scroll room */
+}
+
+/* ═══════════════════════════════════════
+   SECTIONS — absolute within scroll space
+   JS positions them based on scroll triggers
+═══════════════════════════════════════ */
+.panel{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  z-index:50;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:0 8vw;
+  pointer-events:none;
+  opacity:0;
+  transition:none; /* JS handles transitions */
+}
+
+/* ═══════════════════════════════════════
+   HERO PANEL
+═══════════════════════════════════════ */
+#panel-hero{
+  justify-content:flex-end;
+  padding-bottom:14vh;
+  pointer-events:auto;
+}
+
+.eyebrow{
+  font-family:'Space Mono',monospace;
+  font-size:.68rem;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--acc);margin-bottom:1.5rem;
+  transform:translateY(20px);
+  transition:transform .8s ease,opacity .8s ease;
+}
+
+.hero-h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(4.5rem,12vw,10.5rem);
+  font-weight:600;line-height:.95;letter-spacing:-.01em;
+  transform:translateY(40px);
+  transition:transform 1s ease,opacity 1s ease;
+}
+
+.hero-h1 em{
+  font-style:italic;
+  font-weight:500;
+  background:
+    radial-gradient(circle at 30% 35%, #aef0ff 0%, transparent 24%),
+    radial-gradient(circle at 75% 25%, #ffb88c 0%, transparent 26%),
+    conic-gradient(from 200deg at 50% 50%, #2b1a6b, #3f6fd6, #4fd6c4, #9b5fe0, #ff8fb3, #2b1a6b);
+  background-size:200% 200%, 200% 200%, 320% 320%;
+  background-position:0 0, 0 0, 0 0;
+  animation:vangoghShift 16s ease-in-out infinite;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(126,182,240,0.4));
+}
+@keyframes vangoghShift{
+  0%,100%{background-position:0% 0%, 100% 100%, 0% 0%;}
+  50%{background-position:100% 100%, 0% 0%, 100% 50%;}
+}
+
+.hero-sub{
+  margin-top:1.8rem;
+  font-size:clamp(.9rem,1.6vw,1.2rem);
+  font-weight:300;color:var(--dim);
+  max-width:52ch;line-height:1.8;
+  transform:translateY(30px);
+  transition:transform 1.1s ease,opacity 1.1s ease;
+}
+
+.hero-links{
+  margin-top:2.5rem;display:flex;gap:2rem;align-items:center;
+  transform:translateY(20px);
+  transition:transform 1.2s ease,opacity 1.2s ease;
+}
+
+/* scroll cue */
+#scroll-cue{
+  position:fixed;
+  left:62%;bottom:5.5rem;
+  transform:translateX(-50%) translateY(10px);
+  z-index:150;
+  display:flex;flex-direction:column;align-items:center;gap:.7rem;
+  opacity:0;
+  transition:opacity 1.5s ease, transform .6s ease;
+  pointer-events:none;
+}
+#scroll-cue.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#scroll-cue.hide{opacity:0;transform:translateX(-50%) translateY(10px);}
+.scroll-cue-mouse{
+  width:24px;height:38px;
+  border:1.5px solid #aef0ff;
+  border-radius:13px;
+  display:flex;justify-content:center;padding-top:6px;
+  box-shadow:0 0 18px rgba(174,240,255,.5), 0 0 30px rgba(155,123,219,.35);
+}
+.scroll-cue-dot{
+  width:4px;height:7px;border-radius:2px;
+  background:linear-gradient(180deg,#aef0ff,#9b5fe0);
+  box-shadow:0 0 8px rgba(174,240,255,.8);
+  animation:scrollDot 1.8s ease-in-out infinite;
+}
+@keyframes scrollDot{
+  0%{opacity:1;transform:translateY(0);}
+  70%{opacity:0;transform:translateY(12px);}
+  100%{opacity:0;transform:translateY(0);}
+}
+.scroll-cue-label{
+  font-family:'Space Mono',monospace;
+  font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;
+  color:#cdb8ff;
+  text-shadow:0 0 14px rgba(155,123,219,.7);
+  white-space:nowrap;
+}
+
+.btn{
+  display:inline-block;
+  padding:.8rem 2rem;
+  background:rgba(60,40,120,.35);
+  border:1px solid rgba(155,123,219,.5);
+  color:#c9b8f5;
+  font-family:'Sora',sans-serif;
+  font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;
+  text-decoration:none;
+  backdrop-filter:blur(10px);
+  transition:background .3s,border-color .3s,color .3s,box-shadow .3s;
+}
+.btn:hover{background:rgba(90,60,170,.45);border-color:var(--acc);color:#fff;box-shadow:0 0 24px rgba(155,123,219,.35);}
+.btn.solid{background:linear-gradient(135deg,#5a3fc0,#7eb6f0);color:#0a0018;border-color:transparent;}
+.btn.solid:hover{background:linear-gradient(135deg,#7155d6,#9ccdff);box-shadow:0 0 30px rgba(126,182,240,.4);}
+
+/* ═══════════════════════════════════════
+   FLOATING CONTENT PANELS (revealed by scroll)
+═══════════════════════════════════════ */
+.content-block{
+  position:fixed;
+  z-index:60;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .6s ease,transform .6s ease;
+}
+.content-block.visible{
+  pointer-events:auto;
+  opacity:1;
+}
+
+/* section label */
+.s-label{
+  font-family:'Space Mono',monospace;
+  font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--acc);margin-bottom:.75rem;
+}
+
+.s-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.3rem,5.5vw,4.5rem);
+  font-weight:600;line-height:1.05;letter-spacing:-.01em;
+  margin-bottom:1.5rem;
+}
+.s-title .hi{color:var(--acc2);font-style:italic;}
+
+/* glass card */
+.glass{
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  padding:1.4rem 1.8rem;
+  box-shadow:0 0 60px rgba(150,140,255,.06) inset, 0 8px 40px rgba(0,0,0,.25);
+}
+
+/* exp card */
+.exp-card{
+  border-left:2px solid rgba(183,148,244,.3);
+  padding-left:1.5rem;
+  margin-bottom:1rem;
+}
+.exp-org{
+  font-family:'Space Mono',monospace;
+  font-size:.6rem;letter-spacing:.3em;color:var(--acc);
+  text-transform:uppercase;margin-bottom:.3rem;
+}
+.exp-role{font-size:1rem;font-weight:600;margin-bottom:.2rem;}
+.exp-date{font-family:'Space Mono',monospace;font-size:.6rem;color:rgba(180,195,255,.3);margin-bottom:.6rem;}
+.exp-bullets{list-style:none;}
+.exp-bullets li{
+  font-size:.8rem;color:var(--dim);line-height:1.5;
+  padding-left:1rem;position:relative;margin-bottom:.35rem;
+}
+.exp-bullets li::before{content:'›';position:absolute;left:0;color:var(--acc);}
+
+/* stats row */
+.stats{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem;}
+.stat{
+  font-family:'Space Mono',monospace;font-size:.62rem;
+  padding:.22rem .6rem;border-radius:2px;
+  background:rgba(183,148,244,.1);border:1px solid rgba(183,148,244,.2);
+  color:#c4b5fd;
+}
+.stat.gold{background:rgba(246,201,14,.08);border-color:rgba(246,201,14,.2);color:var(--gold);}
+.stat.blue{background:rgba(99,179,237,.08);border-color:rgba(99,179,237,.2);color:var(--acc2);}
+
+/* project card */
+.proj-card{
+  padding:1.8rem 2rem;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  transition:border-color .3s;
+  margin-bottom:1px;
+}
+.proj-card:hover{border-color:rgba(126,182,240,.4);}
+.proj-tag{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--acc2);margin-bottom:.6rem;}
+.proj-title{font-size:1.1rem;font-weight:600;margin-bottom:.7rem;}
+.proj-desc{font-size:.83rem;color:var(--dim);line-height:1.7;margin-bottom:1rem;}
+.chips{display:flex;flex-wrap:wrap;gap:.3rem;}
+.chip{font-family:'Space Mono',monospace;font-size:.58rem;padding:.18rem .5rem;border:1px solid rgba(180,195,255,.1);color:rgba(180,195,255,.4);}
+
+/* skill grid */
+.skill-col .sk-label{
+  font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.32em;text-transform:uppercase;
+  color:#d4c2ff;margin-bottom:.7rem;
+  padding-bottom:.4rem;border-bottom:1px solid rgba(183,148,244,.25);
+  text-shadow:0 0 12px rgba(155,123,219,.5);
+}
+.sk-tags{display:flex;flex-wrap:wrap;gap:.4rem;}
+.sk-tag{
+  font-size:.8rem;color:#e4e8ff;font-weight:500;
+  padding:.3rem .7rem;border:1px solid rgba(195,205,255,.18);
+  background:rgba(120,110,200,.1);
+  transition:border-color .2s,color .2s,background .2s;
+}
+.sk-tag:hover{border-color:rgba(155,123,219,.6);color:#fff;background:rgba(155,123,219,.18);}
+
+/* contact big */
+.contact-h{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3.5rem,10vw,9rem);
+  font-weight:600;line-height:.95;letter-spacing:-.01em;
+  margin-bottom:2.5rem;
+}
+.contact-h span{
+  font-style:italic;font-weight:500;
+  background:
+    radial-gradient(circle at 30% 35%, #aef0ff 0%, transparent 24%),
+    radial-gradient(circle at 75% 25%, #ffb88c 0%, transparent 26%),
+    conic-gradient(from 200deg at 50% 50%, #2b1a6b, #3f6fd6, #4fd6c4, #9b5fe0, #ff8fb3, #2b1a6b);
+  background-size:200% 200%, 200% 200%, 320% 320%;
+  animation:vangoghShift 16s ease-in-out infinite;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(126,182,240,0.35));
+}
+.contact-links{display:flex;flex-wrap:wrap;gap:2.5rem;}
+.cl{
+  font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(195,205,255,.5);text-decoration:none;
+  transition:color .3s;position:relative;
+}
+.cl::after{
+  content:'';position:absolute;bottom:-3px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));transform:scaleX(0);transform-origin:left;transition:transform .3s;
+}
+.cl:hover{color:var(--white);}
+.cl:hover::after{transform:scaleX(1);}
+
+/* ═══════════════════════════════════════
+   SCROLL PROGRESS
+═══════════════════════════════════════ */
+#prog{
+  position:fixed;top:0;left:0;height:1px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));
+  z-index:300;
+  transition:width .1s;
+}
+
+/* ═══════════════════════════════════════
+   SECTION INDICATOR
+═══════════════════════════════════════ */
+#sec-ind{
+  position:fixed;right:2.5rem;top:50%;transform:translateY(-50%);
+  z-index:200;
+  display:flex;flex-direction:column;gap:.6rem;
+}
+.si{
+  width:4px;height:4px;border-radius:50%;
+  background:rgba(180,195,255,.2);
+  transition:background .4s,transform .4s;
+  cursor:pointer;
+}
+.si.active{background:var(--acc);transform:scale(1.8);}
+
+/* reveal anim */
+@keyframes fadeReveal{
+  from{opacity:0;transform:translateY(30px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* subtle space-themed scrollbars for inner content blocks */
+.content-block > div::-webkit-scrollbar{width:5px;}
+.content-block > div::-webkit-scrollbar-track{background:transparent;}
+.content-block > div::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,rgba(155,123,219,.5),rgba(126,182,240,.5));
+  border-radius:3px;
+}
+.content-block > div::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,rgba(155,123,219,.8),rgba(126,182,240,.8));
+}
+.content-block > div{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(155,123,219,.5) transparent;
+}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="warp-overlay"></div>
+<div id="prog"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo"></div>
+  <div class="nav-links">
+    <a href="#" onclick="scrollTo(0,window.innerHeight*1.2);return false;">Research</a>
+    <a href="#" onclick="scrollTo(0,window.innerHeight*3.2);return false;">Projects</a>
+    <a href="#" onclick="scrollTo(0,window.innerHeight*5.2);return false;">Skills</a>
+    <a href="#" onclick="scrollTo(0,window.innerHeight*7);return false;">Contact</a>
+  </div>
+</nav>
+
+<!-- HUD -->
+<div class="hud" id="hud-tl">
+  <div class="hud-speed" id="hud-speed">VELOCITY: 0.00 c</div>
+  <div class="hud-coords" id="hud-coords">RA 17h 45m 40s · DEC −29° 00′ 28″</div>
+</div>
+<div class="hud" id="hud-br">
+  <div class="hl">CURRENT POSITION: ORION SPUR</div>
+  <div class="hl" id="hud-obj">SECTOR: OUTER ARM</div>
+</div>
+<div class="hud" id="hud-bl">
+  <div class="hl">smerarawal@gmail.com</div>
+  <div class="hl">+91 96674 73752</div>
+</div>
+
+<div id="crosshair"></div>
+
+<!-- SECTION INDICATOR -->
+<div id="sec-ind">
+  <div class="si active" data-sec="0"></div>
+  <div class="si" data-sec="1"></div>
+  <div class="si" data-sec="2"></div>
+  <div class="si" data-sec="3"></div>
+  <div class="si" data-sec="4"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<div class="panel" id="panel-hero">
+  <div class="eyebrow" id="ey">ML Researcher · IIT BHU · IIM Ranchi · WorldQuant</div>
+  <h1 class="hero-h1" id="hh1"><em>Smera</em><br>Rawal</h1>
+  <p class="hero-sub" id="hsub">
+    Building systems that learn from the universe — from physiotherapy motion across six joints to RL strategies navigating Indian equity markets. Falling through data the way light falls through space.
+  </p>
+  <div class="hero-links" id="hlinks">
+    <a href="mailto:smerarawal@gmail.com" class="btn solid">Get in touch</a>
+    <a href="#" class="btn" onclick="scrollTo(0,window.innerHeight*1.2);return false;">Explore research ↓</a>
+  </div>
+</div>
+
+<div id="scroll-cue">
+  <div class="scroll-cue-mouse"><div class="scroll-cue-dot"></div></div>
+  <div class="scroll-cue-label">Scroll to drift through space</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     RESEARCH BLOCK
+══════════════════════════════════════ -->
+<div class="content-block" id="block-exp" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:6vh 8vw;">
+  <div style="max-width:900px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="s-label">Research Coordinates</div>
+    <h2 class="s-title" style="margin-bottom:1rem;">Experience,<br>one <span class="hi">trajectory</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5px;border:1px solid rgba(183,148,244,.08);">
+
+      <div class="exp-card glass">
+        <div class="exp-org">IIT BHU · Prof. Pankhuri Jain</div>
+        <div class="exp-role">Research Intern — Motion Intelligence</div>
+        <div class="exp-date">May 2026 — Present</div>
+        <ul class="exp-bullets">
+          <li>ST-GCN + Transformer + BiLSTM for physiotherapy exercise quality from RGB video.</li>
+          <li>Pipeline: CLAHE → MediaPipe → Kalman smoothing → DTW segmentation → multi-task classification.</li>
+          <li>102 clinically relevant features — ROM, jerk, symmetry, EC ratio across 6 joints.</li>
+          <li>Real-time rehab interface → torque commands for knee/hip exoskeleton actuators.</li>
+        </ul>
+        <div class="stats">
+          <span class="stat gold">81.6% LOSO Accuracy</span>
+          <span class="stat">102 Features</span>
+          <span class="stat">2 Control Modes</span>
+        </div>
+      </div>
+
+      <div class="exp-card glass">
+        <div class="exp-org">IIM Ranchi · Prof. Sobhan Sarkar</div>
+        <div class="exp-role">Research Intern — Game Theory &amp; AI Agents</div>
+        <div class="exp-date">May 2026 — Present</div>
+        <ul class="exp-bullets">
+          <li>Game theory-inspired pricing &amp; inventory agents under uncertain demand.</li>
+          <li>Price elasticity + Newsvendor Problem for adaptive decision making.</li>
+          <li>Price of Anarchy (PoA) analysis for decentralized agent efficiency loss.</li>
+          <li>MARL frameworks vs LLM orchestration agents on ODS, PBS, DDI metrics.</li>
+        </ul>
+        <div class="stats">
+          <span class="stat">MARL vs LLM</span>
+          <span class="stat">Price of Anarchy</span>
+          <span class="stat blue">Newsvendor</span>
+        </div>
+      </div>
+
+      <div class="exp-card glass" style="grid-column:span 2;">
+        <div class="exp-org">WorldQuant</div>
+        <div class="exp-role">Quantitative Finance Research Consultant</div>
+        <div class="exp-date">Apr 2026 — Present</div>
+        <ul class="exp-bullets" style="columns:2;gap:2rem;">
+          <li>Alpha signals from market microstructure &amp; statistical patterns in financial time-series.</li>
+          <li>Sharpe ratio, IC and turnover analysis for rigorous signal validation.</li>
+        </ul>
+        <div class="stats">
+          <span class="stat gold">Sharpe 2.66</span>
+          <span class="stat gold">24%+ Returns</span>
+          <span class="stat gold">&lt;5% Drawdown</span>
+          <span class="stat">WorldQuant Gold · IQC 2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PROJECTS BLOCK
+══════════════════════════════════════ -->
+<div class="content-block" id="block-proj" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:6vh 8vw;">
+  <div style="max-width:960px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="s-label">Mission Logs</div>
+    <h2 class="s-title">Systems built<br>in the <span class="hi">dark</span></h2>
+
+    <div class="proj-card">
+      <div class="proj-tag">Reinforcement Learning · Finance</div>
+      <div class="proj-title">Enhanced RL Trading System — NSE Indian Equities</div>
+      <div class="proj-desc">Risk-aware RL framework for portfolio optimization using SAC, TD3, PPO, A2C. Custom reward incorporating drawdown, turnover, and Sortino penalties. 29 engineered features with ensemble inference. Benchmarked vs Nifty 50, Equal Weight, Momentum.</div>
+      <div class="chips"><span class="chip">SAC</span><span class="chip">TD3</span><span class="chip">PPO</span><span class="chip">A2C</span><span class="chip">Custom Gym Env</span><span class="chip">Sharpe·Sortino·Calmar·VaR</span></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:1px;">
+      <div class="proj-card">
+        <div class="proj-tag">Astrophysics · Time Series</div>
+        <div class="proj-title">Stellar Differential Rotation &amp; Spot Evolution</div>
+        <div class="proj-desc">Learning rotational modulation from stellar light curves. Lomb–Scargle periodogram on irregularly sampled astronomical data. Synthetic noise injection for robustness.</div>
+        <div class="chips"><span class="chip">LSTM</span><span class="chip">1D CNN</span><span class="chip">Transformer</span><span class="chip">Lomb–Scargle</span></div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-tag">Multimodal AI · Security</div>
+        <div class="proj-title">Real-time Multimodal Deepfake Detection</div>
+        <div class="proj-desc">Autoencoders for facial analysis, synthetic speech, lip-sync consistency. Transformer fusion architecture. ONNX inference for live WebRTC/RTP traffic.</div>
+        <div class="chips"><span class="chip">Autoencoder</span><span class="chip">Transformer Fusion</span><span class="chip">ONNX</span><span class="chip">WebRTC</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SKILLS BLOCK
+══════════════════════════════════════ -->
+<div class="content-block" id="block-skills" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:6vh 8vw;">
+  <div style="max-width:900px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="s-label">Instrumentation</div>
+    <h2 class="s-title">The <span class="hi">toolkit</span></h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2rem;margin-top:2rem;" class="glass" style="padding:2rem;">
+      <div class="skill-col">
+        <div class="sk-label">Languages</div>
+        <div class="sk-tags"><span class="sk-tag">Python</span><span class="sk-tag">C++</span><span class="sk-tag">Java</span><span class="sk-tag">C</span><span class="sk-tag">JS</span></div>
+      </div>
+      <div class="skill-col">
+        <div class="sk-label">ML / DL</div>
+        <div class="sk-tags"><span class="sk-tag">Transformers</span><span class="sk-tag">BiLSTM</span><span class="sk-tag">ST-GCN</span><span class="sk-tag">CNN</span><span class="sk-tag">RL / MARL</span><span class="sk-tag">GenAI</span><span class="sk-tag">NLP</span></div>
+      </div>
+      <div class="skill-col">
+        <div class="sk-label">Libraries</div>
+        <div class="sk-tags"><span class="sk-tag">TensorFlow</span><span class="sk-tag">Keras</span><span class="sk-tag">Scikit-learn</span><span class="sk-tag">NumPy</span><span class="sk-tag">Pandas</span><span class="sk-tag">MediaPipe</span></div>
+      </div>
+      <div class="skill-col">
+        <div class="sk-label">Tools</div>
+        <div class="sk-tags"><span class="sk-tag">Git</span><span class="sk-tag">Linux</span><span class="sk-tag">VS Code</span><span class="sk-tag">HTML/CSS</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem;">
+      <div style="border-left:2px solid var(--gold);padding-left:1rem;">
+        <div style="font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-bottom:.35rem;">WorldQuant Gold</div>
+        <div style="font-size:.85rem;font-weight:500;">IQC 2026</div>
+      </div>
+      <div style="border-left:2px solid var(--acc2);padding-left:1rem;">
+        <div style="font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.25em;color:var(--acc2);text-transform:uppercase;margin-bottom:.35rem;">IBM</div>
+        <div style="font-size:.85rem;font-weight:500;">Generative AI Certification</div>
+      </div>
+      <div style="border-left:2px solid var(--acc);padding-left:1rem;">
+        <div style="font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.25em;color:var(--acc);text-transform:uppercase;margin-bottom:.35rem;">Stanford · Andrew Ng</div>
+        <div style="font-size:.85rem;font-weight:500;">Machine Learning Specialization</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;">
+      <div style="flex:1 1 200px;padding:1.2rem 1.4rem;background:rgba(99,179,237,.05);border:1px solid rgba(99,179,237,.1);">
+        <div style="font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:var(--acc2);text-transform:uppercase;margin-bottom:.4rem;">NASA Citizen Science</div>
+        <div style="font-size:.85rem;font-weight:500;margin-bottom:.3rem;">AI/ML Working Group Member</div>
+        <div style="font-size:.78rem;color:var(--dim);">AI/ML-driven scientific discovery with interdisciplinary researchers.</div>
+      </div>
+      <div style="flex:1 1 200px;padding:1.2rem 1.4rem;background:rgba(99,179,237,.05);border:1px solid rgba(99,179,237,.1);">
+        <div style="font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:var(--acc2);text-transform:uppercase;margin-bottom:.4rem;">Google Developer's Group</div>
+        <div style="font-size:.85rem;font-weight:500;margin-bottom:.3rem;">Management &amp; Outreach Member</div>
+        <div style="font-size:.78rem;color:var(--dim);">Technical events, workshops and external collaborations.</div>
+      </div>
+      <div style="flex:1 1 200px;padding:1.2rem 1.4rem;background:rgba(99,179,237,.05);border:1px solid rgba(99,179,237,.1);">
+        <div style="font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:var(--acc2);text-transform:uppercase;margin-bottom:.4rem;">TEDx VITC</div>
+        <div style="font-size:.85rem;font-weight:500;margin-bottom:.3rem;">Logistics Lead</div>
+        <div style="font-size:.78rem;color:var(--dim);">Vendor coordination and cross-functional execution.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CONTACT BLOCK
+══════════════════════════════════════ -->
+<div class="content-block" id="block-contact" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:0 8vw;text-align:center;">
+  <div>
+    <div class="s-label" style="text-align:center;margin-bottom:1.5rem;">Signal received</div>
+    <div class="contact-h">Let's<br><span>connect.</span></div>
+    <div class="contact-links" style="justify-content:center;">
+      <a href="mailto:smerarawal@gmail.com" class="cl">Email</a>
+      <a href="https://linkedin.com" class="cl" target="_blank">LinkedIn</a>
+      <a href="https://github.com" class="cl" target="_blank">GitHub</a>
+      <a href="tel:+919667473752" class="cl">+91 96674 73752</a>
+    </div>
+    <div style="margin-top:3rem;font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.25em;color:rgba(180,195,255,.2);">
+      VIT CHENNAI · B.TECH CS &amp; DATA SCIENCE · 2024–2028
+    </div>
+  </div>
+</div>
+
+<!-- SCROLL SPACER -->
+<div style="position:relative;z-index:1;height:900vh;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ══════════════════════════════════════════════
+   THREE.JS SCENE
+══════════════════════════════════════════════ */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.setClearColor(0x03050f,1);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x03050f,0.0016);
+
+const cam = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,3000);
+cam.position.z = 0;
+
+/* ── STAR LAYERS (parallax depths) ── */
+function makeStarLayer(count,depth,size,color,spread){
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    pos[i*3]  =(Math.random()-.5)*spread;
+    pos[i*3+1]=(Math.random()-.5)*spread*.6;
+    pos[i*3+2]=-Math.random()*depth;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({color,size,transparent:true,opacity:.9,depthWrite:false,sizeAttenuation:true});
+  return new THREE.Points(geo,mat);
+}
+
+// Layer 1 — foreground, small tight stars, fly past fast
+const stars1 = makeStarLayer(2000,300,0.25,0xffffff,200);
+// Layer 2 — mid field
+const stars2 = makeStarLayer(3000,600,0.5,0xd0d8ff,350);
+// Layer 3 — background, slow
+const stars3 = makeStarLayer(5000,1000,0.8,0x8899cc,500);
+// Layer 4 — deep field, almost static
+const stars4 = makeStarLayer(8000,2000,1.2,0x445566,700);
+scene.add(stars1,stars2,stars3,stars4);
+
+/* ── WARP STREAKS (forward motion feel) ── */
+const streakGeo = new THREE.BufferGeometry();
+const STREAKS = 600;
+const sPos = new Float32Array(STREAKS*6); // line segments
+const sOpacity = new Float32Array(STREAKS);
+for(let i=0;i<STREAKS;i++){
+  const x=(Math.random()-.5)*300;
+  const y=(Math.random()-.5)*200;
+  const z=-Math.random()*400;
+  const len=1+Math.random()*8;
+  sPos[i*6]=x; sPos[i*6+1]=y; sPos[i*6+2]=z;
+  sPos[i*6+3]=x; sPos[i*6+4]=y; sPos[i*6+5]=z-len;
+}
+streakGeo.setAttribute('position',new THREE.BufferAttribute(sPos,3));
+const streakMat = new THREE.LineBasicMaterial({color:0xaabbff,transparent:true,opacity:0,depthWrite:false});
+const streaks = new THREE.LineSegments(streakGeo,streakMat);
+scene.add(streaks);
+
+/* ── NEBULA VOLUMES ── */
+function nebula(count,pos,c1,c2,spread){
+  const geo=new THREE.BufferGeometry();
+  const p=new Float32Array(count*3),c=new Float32Array(count*3),s=new Float32Array(count);
+  const ca=new THREE.Color(c1),cb=new THREE.Color(c2);
+  for(let i=0;i<count;i++){
+    const r=Math.pow(Math.random(),.4)*spread;
+    const a=Math.random()*Math.PI*2,b=Math.random()*Math.PI;
+    p[i*3]=Math.sin(b)*Math.cos(a)*r+(Math.random()-.5)*spread*.4;
+    p[i*3+1]=Math.cos(b)*r*.35+(Math.random()-.5)*spread*.2;
+    p[i*3+2]=Math.sin(b)*Math.sin(a)*r+(Math.random()-.5)*spread*.4;
+    const cc=ca.clone().lerp(cb,Math.random());
+    c[i*3]=cc.r;c[i*3+1]=cc.g;c[i*3+2]=cc.b;
+    s[i]=2+Math.random()*5;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(p,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(c,3));
+  geo.setAttribute('size',new THREE.BufferAttribute(s,1));
+  const mat=new THREE.ShaderMaterial({
+    uniforms:{},
+    vertexShader:`attribute float size;attribute vec3 color;varying vec3 vColor;void main(){vColor=color;vec4 mvp=modelViewMatrix*vec4(position,1.);gl_PointSize=size*(250./-mvp.z);gl_Position=projectionMatrix*mvp;}`,
+    fragmentShader:`varying vec3 vColor;void main(){vec2 uv=gl_PointCoord-.5;float d=length(uv);if(d>.5)discard;gl_FragColor=vec4(vColor,(1.-smoothstep(.0,.5,d))*.3);}`,
+    transparent:true,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  const pts=new THREE.Points(geo,mat);
+  pts.position.set(...pos);
+  return pts;
+}
+
+// nebulae at various Z depths
+scene.add(nebula(4000,[-40,15,-180],0xff2277,0x5500ff,60));
+scene.add(nebula(3000,[60,-10,-320],0x0088ff,0x00ffcc,50));
+scene.add(nebula(3500,[-20,-20,-500],0xff6600,0xff0044,65));
+scene.add(nebula(2500,[80,30,-700],0x8800ff,0x00ccff,45));
+scene.add(nebula(3000,[-70,10,-900],0xff4400,0xffaa00,55));
+
+/* ── VAN GOGH SWIRLS — Starry Night-style brushstroke spirals ── */
+function vanGoghSwirl(pos,scale,c1,c2,arms,turns){
+  const g=new THREE.Group();g.position.set(...pos);
+  const ca=new THREE.Color(c1),cb=new THREE.Color(c2);
+  for(let arm=0;arm<arms;arm++){
+    const pts=[];
+    const segs=140;
+    const armOffset=(arm/arms)*Math.PI*2;
+    const armRadiusJitter=.7+Math.random()*.6;
+    for(let i=0;i<=segs;i++){
+      const tt=i/segs;
+      const ang=armOffset+tt*Math.PI*2*turns;
+      const r=tt*scale*armRadiusJitter;
+      const wob=Math.sin(tt*9+arm)*scale*.06*(1-tt);
+      pts.push(new THREE.Vector3(
+        Math.cos(ang)*r+wob,
+        Math.sin(tt*5+arm*1.7)*scale*.08*(1-tt*.5),
+        Math.sin(ang)*r+Math.cos(tt*7)*scale*.05*(1-tt)
+      ));
+    }
+    const curve=new THREE.CatmullRomCurve3(pts);
+    const tubeGeo=new THREE.TubeGeometry(curve,160,scale*.012*(1+Math.random()*.6),5,false);
+    const cc=ca.clone().lerp(cb,arm/Math.max(arms-1,1));
+    const mat=new THREE.MeshBasicMaterial({color:cc,transparent:true,opacity:.16+Math.random()*.1,blending:THREE.AdditiveBlending,depthWrite:false});
+    g.add(new THREE.Mesh(tubeGeo,mat));
+  }
+  // sprinkle thick paint-dab stars along the swirl field
+  const N=400;
+  const dGeo=new THREE.BufferGeometry();
+  const dp=new Float32Array(N*3),dc=new Float32Array(N*3),ds=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const ang=Math.random()*Math.PI*2*turns,r=Math.pow(Math.random(),.6)*scale;
+    dp[i*3]=Math.cos(ang)*r+(Math.random()-.5)*scale*.15;
+    dp[i*3+1]=(Math.random()-.5)*scale*.1;
+    dp[i*3+2]=Math.sin(ang)*r+(Math.random()-.5)*scale*.15;
+    const cc=ca.clone().lerp(cb,Math.random());
+    dc[i*3]=Math.min(1,cc.r+.3);dc[i*3+1]=Math.min(1,cc.g+.3);dc[i*3+2]=Math.min(1,cc.b+.3);
+    ds[i]=.6+Math.random()*1.4;
+  }
+  dGeo.setAttribute('position',new THREE.BufferAttribute(dp,3));
+  dGeo.setAttribute('color',new THREE.BufferAttribute(dc,3));
+  dGeo.setAttribute('size',new THREE.BufferAttribute(ds,1));
+  const dabMat=new THREE.ShaderMaterial({
+    vertexShader:`attribute float size;attribute vec3 color;varying vec3 vColor;void main(){vColor=color;vec4 mvp=modelViewMatrix*vec4(position,1.);gl_PointSize=size*(200./-mvp.z);gl_Position=projectionMatrix*mvp;}`,
+    fragmentShader:`varying vec3 vColor;void main(){vec2 uv=gl_PointCoord-.5;float d=length(uv);if(d>.5)discard;float a=(1.-smoothstep(.0,.5,d));gl_FragColor=vec4(vColor,a*.85);}`,
+    transparent:true,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  g.add(new THREE.Points(dGeo,dabMat));
+  return g;
+}
+
+const swirl1=vanGoghSwirl([-50,5,-230],55,0x3a6fd6,0xffe27a,5,1.6);
+const swirl2=vanGoghSwirl([70,-20,-620],65,0x2e8fb0,0x9b5fe0,4,2.1);
+const swirl3=vanGoghSwirl([-30,25,-980],60,0x4fd6c4,0xff8fb3,6,1.4);
+scene.add(swirl1,swirl2,swirl3);
+
+/* ── GALAXIES ── */
+function galaxy(arms,pts,radius,twist,pos,c1,c2){
+  const geo=new THREE.BufferGeometry();
+  const p=new Float32Array(pts*3),c=new Float32Array(pts*3),s=new Float32Array(pts);
+  const ca=new THREE.Color(c1),cb=new THREE.Color(c2),core=new THREE.Color(0xfff6e0);
+  for(let i=0;i<pts;i++){
+    const arm=i%arms,tNorm=Math.pow(Math.random(),.55),t=tNorm*radius;
+    const angle=(arm/arms)*Math.PI*2+t*twist+(Math.random()-.5)*.35;
+    const sp=(1-tNorm)*2.2+.4;
+    p[i*3]=Math.cos(angle)*t+(Math.random()-.5)*sp;
+    p[i*3+1]=(Math.random()-.5)*sp*.18*(1-tNorm*.6);
+    p[i*3+2]=Math.sin(angle)*t+(Math.random()-.5)*sp;
+    // bright dense core fading to arm colors
+    const coreMix=Math.max(0,1-tNorm*2.4);
+    const cc=ca.clone().lerp(cb,tNorm).lerp(core,coreMix);
+    c[i*3]=cc.r;c[i*3+1]=cc.g;c[i*3+2]=cc.b;
+    s[i]=coreMix>0?(.5+coreMix*1.2):.35;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(p,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(c,3));
+  geo.setAttribute('size',new THREE.BufferAttribute(s,1));
+  const mat=new THREE.ShaderMaterial({
+    vertexShader:`attribute float size;attribute vec3 color;varying vec3 vColor;void main(){vColor=color;vec4 mvp=modelViewMatrix*vec4(position,1.);gl_PointSize=size*(180./-mvp.z);gl_Position=projectionMatrix*mvp;}`,
+    fragmentShader:`varying vec3 vColor;void main(){vec2 uv=gl_PointCoord-.5;float d=length(uv);if(d>.5)discard;float a=(1.-smoothstep(.0,.5,d));gl_FragColor=vec4(vColor,a*.95);}`,
+    transparent:true,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  const g=new THREE.Points(geo,mat);
+  g.position.set(...pos);
+  // central glow sprite
+  const glowCanvas=document.createElement('canvas');glowCanvas.width=128;glowCanvas.height=128;
+  const gctx=glowCanvas.getContext('2d');
+  const grad=gctx.createRadialGradient(64,64,0,64,64,64);
+  grad.addColorStop(0,'rgba(255,248,224,0.9)');
+  grad.addColorStop(.4,'rgba(255,220,180,0.35)');
+  grad.addColorStop(1,'rgba(255,220,180,0)');
+  gctx.fillStyle=grad;gctx.fillRect(0,0,128,128);
+  const glowTex=new THREE.CanvasTexture(glowCanvas);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  glow.scale.set(radius*.9,radius*.9,1);
+  g.add(glow);
+  return g;
+}
+
+const gal1=galaxy(3,15000,45,.7,[-90,25,-400],0xff88cc,0x4488ff);
+gal1.rotation.x=.4;
+const gal2=galaxy(2,10000,32,1.1,[110,-15,-600],0xffcc44,0xff3300);
+gal2.rotation.z=.7;gal2.rotation.x=.25;
+const gal3=galaxy(4,12000,38,.5,[20,40,-1100],0x44ffcc,0x8855ff);
+gal3.rotation.x=.6;
+scene.add(gal1,gal2,gal3);
+
+/* ── BLACK HOLE ── */
+function blackHole(pos){
+  const g=new THREE.Group();
+  g.position.set(...pos);
+  // accretion disk — denser, smoother gradient
+  const dGeo=new THREE.BufferGeometry();
+  const N=16000,dp=new Float32Array(N*3),dc=new Float32Array(N*3),ds=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const a=Math.random()*Math.PI*2,rN=Math.pow(Math.random(),.6),r=6.5+rN*34;
+    const h=(Math.random()-.5)*(1.0/(r*.1));
+    dp[i*3]=Math.cos(a)*r;dp[i*3+1]=h;dp[i*3+2]=Math.sin(a)*r;
+    const t=1-rN; // hot near hole, cool far out
+    dc[i*3]=1; dc[i*3+1]=.35+t*.6; dc[i*3+2]=.05+t*.55;
+    ds[i]=.3+t*.5;
+  }
+  dGeo.setAttribute('position',new THREE.BufferAttribute(dp,3));
+  dGeo.setAttribute('color',new THREE.BufferAttribute(dc,3));
+  dGeo.setAttribute('size',new THREE.BufferAttribute(ds,1));
+  const diskMat=new THREE.ShaderMaterial({
+    vertexShader:`attribute float size;attribute vec3 color;varying vec3 vColor;void main(){vColor=color;vec4 mvp=modelViewMatrix*vec4(position,1.);gl_PointSize=size*(220./-mvp.z);gl_Position=projectionMatrix*mvp;}`,
+    fragmentShader:`varying vec3 vColor;void main(){vec2 uv=gl_PointCoord-.5;float d=length(uv);if(d>.5)discard;float a=(1.-smoothstep(.0,.5,d));gl_FragColor=vec4(vColor,a*.9);}`,
+    transparent:true,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending
+  });
+  g.add(new THREE.Points(dGeo,diskMat));
+  // gravitational lensing glow behind horizon
+  const lensCanvas=document.createElement('canvas');lensCanvas.width=128;lensCanvas.height=128;
+  const lctx=lensCanvas.getContext('2d');
+  const lgrad=lctx.createRadialGradient(64,64,10,64,64,64);
+  lgrad.addColorStop(0,'rgba(255,180,80,0.95)');
+  lgrad.addColorStop(.35,'rgba(255,120,40,0.45)');
+  lgrad.addColorStop(1,'rgba(255,120,40,0)');
+  lctx.fillStyle=lgrad;lctx.fillRect(0,0,128,128);
+  const lensTex=new THREE.CanvasTexture(lensCanvas);
+  const lensGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:lensTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  lensGlow.scale.set(20,20,1);
+  g.add(lensGlow);
+  // event horizon — pure black sphere on top
+  const horizon=new THREE.Mesh(new THREE.SphereGeometry(5.5,48,48),new THREE.MeshBasicMaterial({color:0x000000}));
+  horizon.renderOrder=1;
+  g.add(horizon);
+  // thin bright photon ring
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(5.7,.18,8,128),new THREE.MeshBasicMaterial({color:0xffe0b0,transparent:true,opacity:.95}));
+  ring.renderOrder=2;
+  g.add(ring);
+  const ring2=new THREE.Mesh(new THREE.TorusGeometry(5.7,.18,8,128),new THREE.MeshBasicMaterial({color:0xffe0b0,transparent:true,opacity:.85}));
+  ring2.rotation.x=Math.PI/2.1;ring2.renderOrder=2;
+  g.add(ring2);
+  // jets
+  [-1,1].forEach(sign=>{
+    const jGeo=new THREE.BufferGeometry();
+    const jp=new Float32Array(1200*3),jc=new Float32Array(1200*3);
+    for(let i=0;i<1200;i++){
+      const h=(i/1200)*50*sign,spread=Math.abs(h)*.06+.4,a=Math.random()*Math.PI*2;
+      jp[i*3]=Math.cos(a)*spread*Math.random();jp[i*3+1]=h;jp[i*3+2]=Math.sin(a)*spread*Math.random();
+      const t=1-Math.abs(h)/50;jc[i*3]=.3+t*.5;jc[i*3+1]=.5+t*.5;jc[i*3+2]=1;
+    }
+    jGeo.setAttribute('position',new THREE.BufferAttribute(jp,3));
+    jGeo.setAttribute('color',new THREE.BufferAttribute(jc,3));
+    g.add(new THREE.Points(jGeo,new THREE.PointsMaterial({size:.45,vertexColors:true,transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending})));
+  });
+  return g;
+}
+const bh=blackHole([-70,8,-750]);
+scene.add(bh);
+
+/* ── SUPERNOVA ── */
+function supernova(pos){
+  const g=new THREE.Group();g.position.set(...pos);
+  [0,1,2,3,4].forEach(i=>{
+    const r=8+i*3.5,N=300;
+    const geo=new THREE.BufferGeometry();
+    const p=new Float32Array(N*3);
+    for(let j=0;j<N;j++){
+      const a=(j/N)*Math.PI*2,jt=(Math.random()-.5)*2;
+      p[j*3]=Math.cos(a)*(r+jt);p[j*3+1]=(Math.random()-.5)*2.5;p[j*3+2]=Math.sin(a)*(r+jt);
+    }
+    geo.setAttribute('position',new THREE.BufferAttribute(p,3));
+    const cols=[0xff8800,0xffaa33,0xffdd00,0xffffff,0xaaddff];
+    g.add(new THREE.Points(geo,new THREE.PointsMaterial({color:cols[i],size:.5,transparent:true,opacity:.8-i*.1,depthWrite:false})));
+  });
+  // bright core glow sprite
+  const glowCanvas=document.createElement('canvas');glowCanvas.width=128;glowCanvas.height=128;
+  const gctx=glowCanvas.getContext('2d');
+  const grad=gctx.createRadialGradient(64,64,0,64,64,64);
+  grad.addColorStop(0,'rgba(255,255,255,1)');
+  grad.addColorStop(.25,'rgba(255,230,180,0.8)');
+  grad.addColorStop(.6,'rgba(255,150,60,0.25)');
+  grad.addColorStop(1,'rgba(255,150,60,0)');
+  gctx.fillStyle=grad;gctx.fillRect(0,0,128,128);
+  const glowTex=new THREE.CanvasTexture(glowCanvas);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  glow.scale.set(14,14,1);
+  g.add(glow);
+  return g;
+}
+const sn=supernova([35,-5,-280]);
+scene.add(sn);
+
+/* ── NEURAL CONSTELLATION ── */
+function neuralNet(pos){
+  const g=new THREE.Group();g.position.set(...pos);
+  const layers=[4,6,6,4];const nodePos=[];
+  layers.forEach((n,li)=>{
+    for(let ni=0;ni<n;ni++){
+      nodePos.push(new THREE.Vector3(
+        (li-(layers.length-1)/2)*14,
+        (ni-(n-1)/2)*5,
+        (Math.random()-.5)*6 // depth jitter so it reads as 3D, not a flat panel
+      ));
+    }
+  });
+  let ls=0;
+  for(let li=0;li<layers.length-1;li++){
+    for(let a=0;a<layers[li];a++){
+      for(let b=0;b<layers[li+1];b++){
+        const pts=[nodePos[ls+a],nodePos[ls+layers[li]+b]];
+        const lg=new THREE.BufferGeometry().setFromPoints(pts);
+        g.add(new THREE.Line(lg,new THREE.LineBasicMaterial({color:0x6f8fff,transparent:true,opacity:.22,blending:THREE.AdditiveBlending})));
+      }
+    }
+    ls+=layers[li];
+  }
+  // glowing node sprites instead of flat spheres
+  const glowCanvas=document.createElement('canvas');glowCanvas.width=64;glowCanvas.height=64;
+  const gctx=glowCanvas.getContext('2d');
+  const grad=gctx.createRadialGradient(32,32,0,32,32,32);
+  grad.addColorStop(0,'rgba(220,210,255,1)');
+  grad.addColorStop(.4,'rgba(155,123,219,0.7)');
+  grad.addColorStop(1,'rgba(155,123,219,0)');
+  gctx.fillStyle=grad;gctx.fillRect(0,0,64,64);
+  const glowTex=new THREE.CanvasTexture(glowCanvas);
+  nodePos.forEach(p=>{
+    const m=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+    m.position.copy(p);m.scale.set(4,4,1);g.add(m);
+  });
+  // ambient glow halo behind whole network
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.35}));
+  halo.scale.set(70,40,1);
+  g.add(halo);
+  return g;
+}
+const nn=neuralNet([25,20,-550]);
+nn.rotation.y=-.4;
+scene.add(nn);
+
+/* ── DUST PARTICLES ── */
+const dustGeo=new THREE.BufferGeometry();
+const dustP=new Float32Array(1000*3);
+for(let i=0;i<1000;i++){dustP[i*3]=(Math.random()-.5)*400;dustP[i*3+1]=(Math.random()-.5)*250;dustP[i*3+2]=-Math.random()*1200;}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustP,3));
+scene.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0x6644bb,size:.25,transparent:true,opacity:.35,depthWrite:false})));
+
+/* ═══════════════════════════════════════════
+   SCROLL + CAMERA LOGIC
+═══════════════════════════════════════════ */
+let scrollY=0,targetZ=0,currentZ=0;
+let mx=0,my=0,cmx=0,cmy=0;
+let warpSpeed=0;
+
+window.addEventListener('scroll',()=>{scrollY=window.scrollY;});
+document.addEventListener('mousemove',e=>{
+  mx=(e.clientX/innerWidth-.5)*2;
+  my=(e.clientY/innerHeight-.5)*2;
+});
+window.addEventListener('resize',()=>{
+  cam.aspect=innerWidth/innerHeight;
+  cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+/* sections: which scroll % reveals each block */
+const sections=[
+  {id:'panel-hero',  startPct:0,   endPct:.12},
+  {id:'block-exp',   startPct:.12, endPct:.35},
+  {id:'block-proj',  startPct:.35, endPct:.58},
+  {id:'block-skills',startPct:.58, endPct:.80},
+  {id:'block-contact',startPct:.80,endPct:1.0},
+];
+
+const secInds=document.querySelectorAll('.si');
+const hudObj=document.getElementById('hud-obj');
+const hudSpeed=document.getElementById('hud-speed');
+const hudCoords=document.getElementById('hud-coords');
+const prog=document.getElementById('prog');
+
+const objects=[
+  {z:0,    label:'SECTOR: OUTER ARM'},
+  {z:-280, label:'OBJECT: SN-2024 REMNANT'},
+  {z:-400, label:'GALAXY: NGC-4889 CLUSTER'},
+  {z:-550, label:'SYSTEM: ML CONSTELLATION'},
+  {z:-750, label:'ALERT: M87* PROXIMITY'},
+  {z:-900, label:'DEEP FIELD: INTERGALACTIC'},
+  {z:-1100,label:'GALAXY: ANDROMEDA-TYPE'},
+];
+
+const coords=[
+  'RA 17h 45m 40s · DEC −29° 00′ 28″',
+  'RA 05h 34m 32s · DEC +22° 00′ 52″',
+  'RA 12h 57m 42s · DEC +27° 58′ 48″',
+  'RA 19h 03m 33s · DEC +67° 22′ 11″',
+  'RA 12h 30m 49s · DEC +12° 23′ 28″',
+  'RA 00h 42m 44s · DEC +41° 16′ 09″',
+  'RA 01h 33m 50s · DEC +30° 39′ 35″',
+];
+
+let t=0;
+function lerp(a,b,f){return a+(b-a)*f;}
+
+function animate(){
+  requestAnimationFrame(animate);
+  t+=.008;
+
+  const totalH=document.body.scrollHeight-innerHeight;
+  const pct=Math.min(scrollY/Math.max(totalH,1),1);
+
+  // camera Z — travel 0 to -1200
+  targetZ=-pct*1200;
+  currentZ=lerp(currentZ,targetZ,.05);
+  cam.position.z=currentZ;
+
+  // mouse drift
+  cmx=lerp(cmx,mx*.025,.04);
+  cmy=lerp(cmy,my*.015,.04);
+  cam.rotation.x=-cmy;
+  cam.rotation.y=-cmx;
+
+  // warp speed for streaks
+  const spd=Math.abs(targetZ-currentZ);
+  warpSpeed=lerp(warpSpeed,Math.min(spd*.008,1),.08);
+  streakMat.opacity=warpSpeed*.7;
+  // stretch streaks with speed
+  if(warpSpeed>.05){
+    const arr=sPos;
+    for(let i=0;i<STREAKS;i++){
+      const len=1+warpSpeed*30+Math.random()*10;
+      arr[i*6+5]=arr[i*6+2]-len;
+    }
+    streakGeo.attributes.position.needsUpdate=true;
+  }
+
+  // parallax layers (different z movement speeds)
+  stars1.position.z=currentZ*.9;  // almost same speed — "close"
+  stars2.position.z=currentZ*.6;
+  stars3.position.z=currentZ*.35;
+  stars4.position.z=currentZ*.15; // barely moves — "far"
+
+  // rotate galaxies
+  gal1.rotation.y=t*.04;
+  gal2.rotation.y=-t*.035;
+  gal3.rotation.y=t*.025;
+  // rotate van gogh swirls — slow painterly drift
+  swirl1.rotation.z=t*.05;
+  swirl1.rotation.y=Math.sin(t*.1)*.15;
+  swirl2.rotation.z=-t*.04;
+  swirl2.rotation.x=Math.cos(t*.08)*.12;
+  swirl3.rotation.z=t*.03;
+  swirl3.rotation.y=-t*.06;
+  // rotate BH
+  bh.rotation.y=t*.12;
+  // pulse SN
+  sn.rotation.y=t*.08;
+  sn.scale.setScalar(1+.05*Math.sin(t*1.4));
+  // neural net drift
+  nn.rotation.y=Math.sin(t*.18)*.35-.4;
+
+  // progress bar
+  prog.style.width=(pct*100)+'%';
+
+  // HUD
+  const v=(Math.abs(targetZ-currentZ)*.08).toFixed(2);
+  hudSpeed.textContent='VELOCITY: '+v+' c';
+  const oi=Math.min(Math.floor(pct*objects.length),objects.length-1);
+  hudObj.textContent=objects[oi].label;
+  hudCoords.textContent=coords[oi];
+
+  // section visibility
+  sections.forEach((sec,i)=>{
+    const el=document.getElementById(sec.id);
+    if(!el)return;
+    const inRange=pct>=sec.startPct&&pct<sec.endPct;
+    if(sec.id==='panel-hero'){
+      el.style.opacity=inRange?'1':'0';
+      el.style.pointerEvents=inRange?'auto':'none';
+    } else {
+      el.classList.toggle('visible',inRange);
+    }
+    if(inRange&&i<secInds.length){
+      secInds.forEach((s,j)=>s.classList.toggle('active',j===i));
+    }
+  });
+
+  renderer.render(scene,cam);
+}
+
+/* ─ hero entrance ─ */
+const panelHero=document.getElementById('panel-hero');
+panelHero.style.opacity='1';
+['ey','hh1','hsub','hlinks'].forEach((id,i)=>{
+  const el=document.getElementById(id);
+  if(!el)return;
+  setTimeout(()=>{el.style.opacity='1';el.style.transform='translateY(0)';},500+i*180);
+});
+
+/* ─ scroll cue ─ */
+const scrollCue=document.getElementById('scroll-cue');
+setTimeout(()=>{scrollCue.classList.add('show');},1400);
+window.addEventListener('scroll',()=>{
+  scrollCue.classList.toggle('hide',window.scrollY>40);
+},{passive:true});
+
+animate();
+</script>
+</body>
+</html>
