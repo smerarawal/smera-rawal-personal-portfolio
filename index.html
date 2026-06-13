@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smera Rawal</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@400;600&display=swap');
 
 *{margin:0;padding:0;box-sizing:border-box;}
 
@@ -72,9 +72,9 @@ nav{
   font-family:'Space Mono',monospace;
   pointer-events:none;
 }
-#hud-tl{top:3.2rem;left:50%;transform:translateX(-50%);text-align:center;}
-#hud-tl .hud-speed{font-size:.7rem;letter-spacing:.32em;color:#a8d4ff;text-shadow:0 0 14px rgba(126,182,240,.6);}
-#hud-tl .hud-coords{font-size:.6rem;letter-spacing:.2em;color:rgba(195,205,255,.45);margin-top:.3rem;}
+#hud-tl{top:5.5rem;left:50%;transform:translateX(-50%);text-align:center;transition:left .4s ease,top .4s ease,transform .4s ease;}
+#hud-tl .hud-speed{font-size:.75rem;letter-spacing:.32em;color:#a8d4ff;text-shadow:0 0 14px rgba(126,182,240,.6);}
+#hud-tl .hud-coords{font-size:.65rem;letter-spacing:.2em;color:rgba(195,205,255,.55);margin-top:.35rem;}
 
 #hud-br{bottom:2rem;right:2.5rem;text-align:right;}
 #hud-br .hl{font-size:.6rem;letter-spacing:.2em;color:rgba(212,194,255,.6);line-height:2;}
@@ -196,39 +196,24 @@ nav{
 /* scroll cue */
 #scroll-cue{
   position:fixed;
-  left:62%;bottom:5.5rem;
-  transform:translateX(-50%) translateY(10px);
+  right:2.5rem;bottom:5.4rem;
   z-index:150;
-  display:flex;flex-direction:column;align-items:center;gap:.7rem;
   opacity:0;
-  transition:opacity 1.5s ease, transform .6s ease;
+  text-align:right;
+  transition:opacity 1.5s ease;
   pointer-events:none;
 }
-#scroll-cue.show{opacity:1;transform:translateX(-50%) translateY(0);}
-#scroll-cue.hide{opacity:0;transform:translateX(-50%) translateY(10px);}
-.scroll-cue-mouse{
-  width:24px;height:38px;
-  border:1.5px solid #aef0ff;
-  border-radius:13px;
-  display:flex;justify-content:center;padding-top:6px;
-  box-shadow:0 0 18px rgba(174,240,255,.5), 0 0 30px rgba(155,123,219,.35);
-}
-.scroll-cue-dot{
-  width:4px;height:7px;border-radius:2px;
-  background:linear-gradient(180deg,#aef0ff,#9b5fe0);
-  box-shadow:0 0 8px rgba(174,240,255,.8);
-  animation:scrollDot 1.8s ease-in-out infinite;
-}
-@keyframes scrollDot{
-  0%{opacity:1;transform:translateY(0);}
-  70%{opacity:0;transform:translateY(12px);}
-  100%{opacity:0;transform:translateY(0);}
-}
+#scroll-cue.show{opacity:1;}
+#scroll-cue.hide{opacity:0;}
 .scroll-cue-label{
-  font-family:'Space Mono',monospace;
-  font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;
-  color:#cdb8ff;
-  text-shadow:0 0 14px rgba(155,123,219,.7);
+  font-family:'Orbitron',sans-serif;
+  font-size:.82rem;font-weight:700;letter-spacing:.4em;text-transform:uppercase;
+  color:#fff;
+  text-shadow:
+    0 0 6px #fff,
+    0 0 14px #5ab4ff,
+    0 0 30px #2e90ff,
+    0 0 55px rgba(46,144,255,.5);
   white-space:nowrap;
 }
 
@@ -415,7 +400,30 @@ nav{
   to{opacity:1;transform:translateY(0);}
 }
 
-/* subtle space-themed scrollbars for inner content blocks */
+/* inner cards stay left-aligned */
+.exp-card,.proj-card,.skill-col,.exp-bullets,.proj-desc{text-align:left;}
+.sk-tags{justify-content:flex-start;}
+.stats{justify-content:flex-start;}
+
+/* pulsar */
+#pulsar{
+  position:fixed;top:2rem;left:2.2rem;z-index:200;
+  display:flex;align-items:center;gap:.6rem;pointer-events:none;
+}
+#pulsar-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 0 0 rgba(255,255,255,.4);
+  animation:pulsarBlink 2.8s ease-in-out infinite;
+}
+@keyframes pulsarBlink{
+  0%,100%{opacity:.2;box-shadow:0 0 0 0 rgba(255,255,255,.1);}
+  50%{opacity:1;box-shadow:0 0 0 6px rgba(255,255,255,0);}
+}
+#pulsar-label{
+  font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.2em;
+  color:rgba(255,255,255,.3);text-transform:uppercase;
+}
 .content-block > div::-webkit-scrollbar{width:5px;}
 .content-block > div::-webkit-scrollbar-track{background:transparent;}
 .content-block > div::-webkit-scrollbar-thumb{
@@ -451,7 +459,7 @@ nav{
 <!-- HUD -->
 <div class="hud" id="hud-tl">
   <div class="hud-speed" id="hud-speed">VELOCITY: 0.00 c</div>
-  <div class="hud-coords" id="hud-coords">RA 17h 45m 40s · DEC −29° 00′ 28″</div>
+  <div class="hud-coords" id="hud-coords">GALACTIC CORE · SAGITTARIUS A* VICINITY</div>
 </div>
 <div class="hud" id="hud-br">
   <div class="hl">CURRENT POSITION: ORION SPUR</div>
@@ -477,10 +485,9 @@ nav{
      HERO
 ══════════════════════════════════════ -->
 <div class="panel" id="panel-hero">
-  <div class="eyebrow" id="ey">ML Researcher · IIT BHU · IIM Ranchi · WorldQuant</div>
   <h1 class="hero-h1" id="hh1"><em>Smera</em><br>Rawal</h1>
   <p class="hero-sub" id="hsub">
-    Building systems that learn from the universe — from physiotherapy motion across six joints to RL strategies navigating Indian equity markets. Falling through data the way light falls through space.
+    ML researcher. I build things that learn.
   </p>
   <div class="hero-links" id="hlinks">
     <a href="mailto:smerarawal@gmail.com" class="btn solid">Get in touch</a>
@@ -488,16 +495,17 @@ nav{
   </div>
 </div>
 
+<div id="pulsar"><div id="pulsar-dot"></div><div id="pulsar-label">PSR B1919+21</div></div>
+
 <div id="scroll-cue">
-  <div class="scroll-cue-mouse"><div class="scroll-cue-dot"></div></div>
-  <div class="scroll-cue-label">Scroll to drift through space</div>
+  <div class="scroll-cue-label">scroll</div>
 </div>
 
 <!-- ══════════════════════════════════════
      RESEARCH BLOCK
 ══════════════════════════════════════ -->
-<div class="content-block" id="block-exp" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:6vh 8vw;">
-  <div style="max-width:900px;width:100%;max-height:92vh;overflow-y:auto;">
+<div class="content-block" id="block-exp" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:6vh 8vw;">
+  <div style="max-width:900px;width:100%;max-height:92vh;overflow-y:auto;text-align:center;">
     <div class="s-label">Research Coordinates</div>
     <h2 class="s-title" style="margin-bottom:1rem;">Experience,<br>one <span class="hi">trajectory</span></h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5px;border:1px solid rgba(183,148,244,.08);">
@@ -551,15 +559,28 @@ nav{
           <span class="stat">WorldQuant Gold · IQC 2026</span>
         </div>
       </div>
+
+      <div class="exp-card glass" style="grid-column:span 2;">
+        <div class="exp-org">QSS Technosoft</div>
+        <div class="exp-role">Machine Learning Intern</div>
+        <div class="exp-date">Jun 2026 — Present</div>
+        <ul class="exp-bullets" style="columns:2;gap:2rem;">
+          <li>Developed an agentic research analyst using RAG, memory, MCP integration, and multi-agent orchestration.</li>
+          <li>Integrated vector retrieval, tool calling, and persistent memory to enable context-aware autonomous research.</li>
+          <li>Optimized Snowflake databases through query tuning, schema redesign, and warehouse performance improvements.</li>
+        </ul>
+        <div class="stats">
+          <span class="stat">RAG · Multi-Agent</span>
+          <span class="stat">MCP Integration</span>
+          <span class="stat">Snowflake</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
-<!-- ══════════════════════════════════════
-     PROJECTS BLOCK
 ══════════════════════════════════════ -->
-<div class="content-block" id="block-proj" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:6vh 8vw;">
-  <div style="max-width:960px;width:100%;max-height:92vh;overflow-y:auto;">
+<div class="content-block" id="block-proj" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:6vh 8vw;">
+  <div style="max-width:960px;width:100%;max-height:92vh;overflow-y:auto;text-align:center;">
     <div class="s-label">Mission Logs</div>
     <h2 class="s-title">Systems built<br>in the <span class="hi">dark</span></h2>
 
@@ -590,8 +611,8 @@ nav{
 <!-- ══════════════════════════════════════
      SKILLS BLOCK
 ══════════════════════════════════════ -->
-<div class="content-block" id="block-skills" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:6vh 8vw;">
-  <div style="max-width:900px;width:100%;max-height:92vh;overflow-y:auto;">
+<div class="content-block" id="block-skills" style="top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:6vh 8vw;">
+  <div style="max-width:900px;width:100%;max-height:92vh;overflow-y:auto;text-align:center;">
     <div class="s-label">Instrumentation</div>
     <h2 class="s-title">The <span class="hi">toolkit</span></h2>
 
@@ -1025,6 +1046,22 @@ for(let i=0;i<1000;i++){dustP[i*3]=(Math.random()-.5)*400;dustP[i*3+1]=(Math.ran
 dustGeo.setAttribute('position',new THREE.BufferAttribute(dustP,3));
 scene.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0x6644bb,size:.25,transparent:true,opacity:.35,depthWrite:false})));
 
+/* ── SHOOTING STARS ── */
+const shootingStars=[];
+function spawnShootingStar(){
+  const geo=new THREE.BufferGeometry();
+  const len=18+Math.random()*22;
+  const pts=[new THREE.Vector3(0,0,0),new THREE.Vector3(-len,-(len*.3),0)];
+  geo.setFromPoints(pts);
+  const mat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false});
+  const line=new THREE.Line(geo,mat);
+  line.position.set((Math.random()-.5)*200,30+Math.random()*60,cam.position.z-20);
+  line.userData={vx:-(1.8+Math.random()*2.5),vy:-(0.5+Math.random()*.8),life:1};
+  scene.add(line);
+  shootingStars.push(line);
+}
+setInterval(()=>{if(Math.random()<.6)spawnShootingStar();},2200);
+
 /* ═══════════════════════════════════════════
    SCROLL + CAMERA LOGIC
 ═══════════════════════════════════════════ */
@@ -1069,13 +1106,13 @@ const objects=[
 ];
 
 const coords=[
-  'RA 17h 45m 40s · DEC −29° 00′ 28″',
-  'RA 05h 34m 32s · DEC +22° 00′ 52″',
-  'RA 12h 57m 42s · DEC +27° 58′ 48″',
-  'RA 19h 03m 33s · DEC +67° 22′ 11″',
-  'RA 12h 30m 49s · DEC +12° 23′ 28″',
-  'RA 00h 42m 44s · DEC +41° 16′ 09″',
-  'RA 01h 33m 50s · DEC +30° 39′ 35″',
+  'GALACTIC CORE · SAGITTARIUS A* VICINITY',
+  'ORION NEBULA · STELLAR NURSERY M42',
+  'COMA CLUSTER · 321 MLY FROM EARTH',
+  'CYGNUS X-1 · FIRST BLACK HOLE CONFIRMED',
+  'VIRGO SUPERCLUSTER · LOCAL GROUP EDGE',
+  'ANDROMEDA COLLISION COURSE · T-4.5 GYR',
+  'PILLARS OF CREATION · EAGLE NEBULA M16',
 ];
 
 let t=0;
@@ -1087,6 +1124,12 @@ function animate(){
 
   const totalH=document.body.scrollHeight-innerHeight;
   const pct=Math.min(scrollY/Math.max(totalH,1),1);
+  const hudTl=document.getElementById('hud-tl');
+  const onHero=pct<.12;
+  hudTl.style.top=onHero?'5.5rem':'3.2rem';
+  hudTl.style.left=onHero?'50%':'2.5rem';
+  hudTl.style.transform=onHero?'translateX(-50%)':'translateX(0)';
+  hudTl.style.textAlign=onHero?'center':'left';
 
   // camera Z — travel 0 to -1200
   targetZ=-pct*1200;
@@ -1138,6 +1181,16 @@ function animate(){
   // neural net drift
   nn.rotation.y=Math.sin(t*.18)*.35-.4;
 
+  // shooting stars
+  for(let i=shootingStars.length-1;i>=0;i--){
+    const s=shootingStars[i];
+    s.position.x+=s.userData.vx;
+    s.position.y+=s.userData.vy;
+    s.userData.life-=.022;
+    s.material.opacity=s.userData.life*.85;
+    if(s.userData.life<=0){scene.remove(s);shootingStars.splice(i,1);}
+  }
+
   // progress bar
   prog.style.width=(pct*100)+'%';
 
@@ -1170,7 +1223,7 @@ function animate(){
 /* ─ hero entrance ─ */
 const panelHero=document.getElementById('panel-hero');
 panelHero.style.opacity='1';
-['ey','hh1','hsub','hlinks'].forEach((id,i)=>{
+['hh1','hsub','hlinks'].forEach((id,i)=>{
   const el=document.getElementById(id);
   if(!el)return;
   setTimeout(()=>{el.style.opacity='1';el.style.transform='translateY(0)';},500+i*180);
